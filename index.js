@@ -11,8 +11,8 @@ const port = 4000
 server.use(express.json())
 
 server.use((req, res, next) => {
-    const time = now Date().toISOString()
-    console.log(`[${time}] ${req.ip} ${req.method} ${req.url}`)
+    //const time = now Date().toString();
+    console.log(`${req.ip} ${req.method} ${req.url}`)
     next()
 })
 
