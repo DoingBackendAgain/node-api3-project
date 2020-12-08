@@ -16,8 +16,16 @@ server.use((req, res, next) => {
     next()
 })
 
-server.use(userRouter)
-server.use(postRouter)
+// this is error hanlding(next(err))
+server.use((err, req, res, next)=> {
+    console.log(err)
+    res.status(500).json({
+        message: "Something went wrong"
+    })
+})
+
+server.use(`/api/users`, userRouter)
+server.use(`/api/posts`, postRouter)
 
 server.listen(port, ()=> {
     console.log(`Server running at http://localhost:${port}`)
