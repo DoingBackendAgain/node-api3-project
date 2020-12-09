@@ -1,7 +1,8 @@
 const express = require('express');
 const { orWhereNotExists } = require('../data/dbConfig');
 const {validateUserID, validateUser, validatePost,} = require("../middleware/validate")
-const db = require("./userDb")
+const db = require("./userDb");
+const dbPost = require("../posts/postDb");
 
 
 const router = express.Router();
@@ -19,8 +20,22 @@ router.post('/', validateUser(), (req, res) => {
     })
 });
 
-router.post('/:id/posts', (req, res) => {
-  // do your magic!
+router.post('/:id/posts', validateUserID(), validatePost(), (req, res) => {
+   
+   id = req.params.id
+   const post = {...req.body, user_id: id}
+   console.log("id:", id)
+
+   dbPost.insert(post)
+      .then((post)=> {
+        res.status(201).json(post)
+      })
+      .catch((err) => {
+        console.log(err)
+        res.status(500).json({
+          message: "error getting data"
+        })
+      })
 });
 
 router.get('/', (req, res, next) => {
@@ -38,8 +53,11 @@ router.get('/:id', validateUserID(), (req, res) => {
   
 });
 
-router.get('/:id/posts', (req, res) => {
-  // do your magic!
+router.get('/:id/posts', validateUserID(), (req, res) => {
+  db.getUserPosts(req.params.id)
+    .then((posts)=> {
+      res.status(200).json(posts)
+    })
 });
 
 router.delete('/:id', validateUserID(), (req, res) => {
@@ -51,13 +69,25 @@ router.delete('/:id', validateUserID(), (req, res) => {
       })
 });
 
-router.put('/:id', validateUser(), (req, res) => {
-  const name = req.body.name
-  const id = req.params.id
-  db.update(id, name )
-  res.status(200).json( name, {
-    message: "Yay! You made a change",
-  })
+router.put('/:id', validateUserID(), validateUser(), (req, res) => {
+  const name = req.body
+  db.update(req.params.id, name)
+    .then((update)=> {
+      if(update) {
+        res.status(200).json(update)
+      }
+      else {
+        res.status(404).json({
+          message: "This user could not be found"
+        })
+      }
+   })  
+   .catch(()=> {
+     res.status(500).json({
+       message: "Backend is messed up"
+     })
+   })
+ 
 });
 
 //custom middleware
